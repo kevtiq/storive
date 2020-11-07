@@ -1,0 +1,2 @@
+# storive
+event-driven store
