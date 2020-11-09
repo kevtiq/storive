@@ -17,7 +17,8 @@
     "prettier": "prettier --ignore-path .gitignore \"**/*.+(js|json|ts|tsx)\"",
     "format": "npm run prettier -- --list-different",
     "lint": "eslint --ignore-path .gitignore .",
-    "validate": "npm-run-all --parallel format lint test build && npm run bundlesize"
+    "validate": "npm-run-all --parallel format lint test build speller && npm run bundlesize",
+    "speller": "yaspeller README.md"
   },
   "repository": {
     "type": "git",
