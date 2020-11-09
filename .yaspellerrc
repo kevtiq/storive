@@ -1,0 +1,18 @@
+{
+  "excludeFiles": [
+    ".git",
+    "libs",
+    "node_modules",
+    "yaspeller"
+  ],
+  "lang": "en",
+  "fileExtensions": [
+    ".md",
+    ".css"
+  ],
+  "ignoreCapitalization": true,
+    "ignoreText": [
+      " \\(by [^)]+\\)."
+    ],
+  "dictionary": ["Storive", "UI", "payload", "storive", "rerender"]
+}

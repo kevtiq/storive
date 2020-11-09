@@ -1,14 +1,13 @@
 {
   "include": ["src"],
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "composite": true,
-    "target": "es5",
-    "declaration": true,
-    "moduleResolution": "node",
+    "target": "es2018",
+    "module": "commonjs",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictNullChecks": true,
+    "strict": true,
+    "allowJs": true,
     "outDir": "dist",
     "rootDir": "src",
     "removeComments": true

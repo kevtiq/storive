@@ -2,9 +2,10 @@
   "parser": "@typescript-eslint/parser",
   "extends": [
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended"
+    "plugin:prettier/recommended",
+    "plugin:security/recommended"
   ],
-  "plugins": ["prettier"],
+  "plugins": ["prettier", "security"],
   "env": {
     "browser": true,
     "node": true,
@@ -15,7 +16,8 @@
     "sourceType": "module"
   },
   "rules": {
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+    "security/detect-object-injection": "off"
   },
   "settings": {
     "import/resolver": {
