@@ -1,15 +1,11 @@
-type State = Record<string, unknown>;
-type Payload = Record<string, unknown>;
-type Reducer = (state: State, payload?: Payload) => State | void;
-type RemoveReducer = () => void;
-type Query = (state: State) => State;
-type Event = '@changed' | string;
-type Reducers = Record<Event, Reducer[]>;
-type EventLog = [Event, State][];
-
-type Store = {
+export type State = Record<string, unknown>;
+export type Payload = Record<string, unknown>;
+export type Reducer = (state: State, payload?: Payload) => State | void;
+export type Query = (state: State) => State;
+export type Event = '@changed' | string;
+export type Store = {
   get(query?: Query): State;
-  on(event: Event, reducer: Reducer): RemoveReducer;
+  on(event: Event, reducer: Reducer): () => void;
   dispatch(event: Event, payload?: Payload): void;
   rollback(): void;
 };
@@ -21,14 +17,14 @@ function clone<T>(state: T): T {
 
 export default function store(init: State): Store {
   let _state = init;
-  const _reducers: Reducers = { '@changed': [] };
-  const _log: EventLog = [];
+  const _reducers: Record<Event, Reducer[]> = { '@changed': [] };
+  const _log: [Event, State][] = [];
 
   return {
     get: (query): State => {
       return query ? query(clone<State>(_state)) : clone<State>(_state);
     },
-    on: (event, reducer): RemoveReducer => {
+    on: (event, reducer): (() => void) => {
       (_reducers[event] || (_reducers[event] = [])).push(reducer);
       // Returns function that can be called to remove a reducer
       return () => {
