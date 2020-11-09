@@ -6,6 +6,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
     "strictNullChecks": true,
     "strict": true,
     "allowJs": true,
