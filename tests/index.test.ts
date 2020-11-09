@@ -7,7 +7,7 @@ beforeEach(() => {
   fn = jest.fn((x) => x);
   _store = store({ key: 'value' });
 
-  _store.on('change', (s, { value }) => ({ key: value }));
+  _store.on('change', (_s, { value }) => ({ key: value }));
   _store.on('add', (s, { key, value }) => ({ ...s, [key]: value }));
   _store.on('@changed', fn);
 });
