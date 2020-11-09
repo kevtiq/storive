@@ -1,6 +1,7 @@
 # storive
-event-driven store
 
+event-driven store
+an event-driven data storage with a decoupled state interface that can be used for state-management,
 
 ### Using the storage in React components
 

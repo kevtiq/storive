@@ -1,41 +1,51 @@
-export type StoreValue = Record<string, unknown>;
-export type StoreListener = (value: StoreValue) => void;
-export type StoreUpdateFunction = (value: StoreValue) => StoreValue;
+type State = Record<string, unknown>;
+type Payload = Record<string, unknown>;
+type Reducer = (state: State, payload?: Payload) => State | void;
+type RemoveReducer = () => void;
+type Query = (state: State) => State;
+type Event = '@changed' | string;
+type Reducers = Record<Event, Reducer[]>;
+type EventLog = [Event, State][];
 
-export type Store = {
-  get(callback?: StoreListener): StoreValue;
-  update(fn: StoreUpdateFunction): void;
-  remove(callback: StoreListener): void;
-  rollback(events: number, update: boolean): StoreValue;
+type Store = {
+  get(query?: Query): State;
+  on(event: Event, reducer: Reducer): RemoveReducer;
+  dispatch(event: Event, payload?: Payload): void;
+  rollback(): void;
 };
 
-export default function store(init: StoreValue): Store {
+// Used to ensure immutability
+function clone<T>(state: T): T {
+  return JSON.parse(JSON.stringify(state));
+}
+
+export default function store(init: State): Store {
   let _state = init;
-  const _listeners: StoreListener[] = [];
-  const _history: StoreValue[] = [];
+  const _reducers: Reducers = { '@changed': [] };
+  const _log: EventLog = [];
 
   return {
-    get(listener): StoreValue {
-      if (listener) _listeners.push(listener);
-      return _state;
+    get: (query): State => {
+      return query ? query(clone<State>(_state)) : clone<State>(_state);
     },
-    update(fn): void {
-      _history.unshift({ ..._state });
-      _state = fn(_state);
-      _listeners.forEach((listener): void => listener(_state));
+    on: (event, reducer): RemoveReducer => {
+      (_reducers[event] || (_reducers[event] = [])).push(reducer);
+      // Returns function that can be called to remove a reducer
+      return () => {
+        _reducers[event].splice(_reducers[event].indexOf(reducer) >>> 0, 1);
+      };
     },
-    remove(listener): void {
-      _listeners.splice(_listeners.indexOf(listener) >>> 0, 1);
+    dispatch(event, payload): void {
+      if (!_reducers[event]) return;
+      // Set a copy of the new state on top of the event log.
+      _log.unshift([event, clone<State>(_state)]);
+      _reducers[event].forEach((r) => (_state = r(_state, payload) as State));
+      // Trigger all reducer on the store changes
+      _reducers['@changed'].forEach((listener) => listener(_state));
     },
-    rollback(events = 1): StoreValue {
-      if (events < 0) return _state;
-      const length = _history.length < events ? _history.length : events;
-
-      _state = _history[length - 1];
-      _history.splice(0, length);
-      _listeners.forEach((listener): void => listener(_state));
-
-      return _state;
+    rollback(): void {
+      _state = _log.pop()?.[1] || {};
+      _reducers['@changed'].forEach((listener) => listener(_state));
     },
   };
 }
