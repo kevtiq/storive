@@ -40,7 +40,7 @@ export default function store(init: State): Store {
       _reducers['@changed'].forEach((listener) => listener(_state));
     },
     rollback(): void {
-      _state = _log.pop()?.[1] || {};
+      _state = _log.shift()?.[1] || {};
       _reducers['@changed'].forEach((listener) => listener(_state));
     },
   };

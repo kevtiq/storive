@@ -45,8 +45,10 @@ it('On and off', () => {
 it('rollback', () => {
   _store.dispatch('change', { value: 'new value' });
   expect(_store.get().key).toBe('new value');
+  _store.dispatch('change', { value: 'new value 2' });
   _store.rollback();
-  expect(_store.get().key).toBe('value');
+  expect(_store.get().key).toBe('new value');
+  _store.rollback();
   _store.rollback();
   expect(_store.get().key).toBe(undefined);
 });
