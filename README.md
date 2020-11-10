@@ -54,32 +54,45 @@ With storive it is possible to rollback events using the `rollback` function.
 myStore.rollback();
 ```
 
-## Using the storage in React components
+## React example
 
-You can use the store in combination with React to rerender components. It can easily be used to as a React Hook.
+First you create a React Hook.
 
 ```js
-// useStoreValue.js hook
-import { useState, useRef } from 'react';
-import { store } from 'pubbel';
+import { useReducer, useRef, useLayoutEffect } from 'react';
 
-const state = store({ count: 0 });
-
-export default function useStoreValue(path, def) {
-  // function to force rerender
+export default function useStorive(store, query) {
   const [, rerender] = useReducer((c) => c + 1, 0);
-  const value = useRef(store.get(path, def));
+  const value = useRef(store.get(query));
 
-  // subscription to the pubsub events for the store
-  useEffect(() => {
-    const remove = store.subscribe(path, (v) => {
-      value.current = v;
+  useLayoutEffect(() => {
+    const remove = store.on('@changed', (s) => {
+      value.current = query ? query(s) : s;
       rerender();
     });
-    // remove subscription
     return () => remove();
-  }, []);
+  }, []); //eslint-disable-line
 
-  return value.current;
+  return [value.current, store.dispatch, store.rollback];
 }
 ```
+
+In a component you use it like:
+
+```jsx
+import storive from 'storive';
+import useStorive from './useStorive';
+
+const store = storive({ key: 0 });
+store.on('increment', (s) => ({ key: s.key + 1 }));
+
+export default function MyButton() {
+  const [state, dispatch] = useStorive(store, (s) => s.key * 2);
+
+  return (
+    <button onClick={() => dispatch('increment')}>{`value ${state}`}</button>
+  );
+}
+```
+
+The above component shows the counter times 2.
