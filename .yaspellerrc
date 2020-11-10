@@ -14,5 +14,5 @@
     "ignoreText": [
       " \\(by [^)]+\\)."
     ],
-  "dictionary": ["Storive", "UI", "payload", "storive", "rerender"]
+  "dictionary": ["Storive", "UI", "payload", "storive", "rerender", "Vue"]
 }

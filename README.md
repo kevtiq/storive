@@ -6,62 +6,51 @@
 [![Minified size](https://img.shields.io/bundlephobia/min/storive?label=minified)](https://www.npmjs.com/package/storive)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Storive is a small event-driven data and immutable store that can be used for in memory data and state management. It comes with a decoupled state interface.
+Storive is tiny event-driven atomic state management library that can be used in any modern front-end frameworks (e.g. React, Vue, etc.). It is build on several core principles.
 
-## Setup
-
-The setup is of low effect, as it only requires the use the default export from `storive`. The function has an optional input that sets the default state value.
+- **Event-driven**: mutations can be registered on events and are only executed when an event is dispatched.
+- **Immutable**: data is immutable and cannot be mutated directly, due to an access layer or state interface.
+- **Decoupled**: events can be registered anywhere (e.g. inside a component) and do not have to be registered near where the store is defined.
+- **Modular**: can be used as a single global store, or as many decoupled and distributed small stores.
 
 ```js
 import storive from 'storive';
-const myStore = storive({ users: [] });
-```
+// declare a store and set the initial values
+const myStore = storive({ count: 0 });
 
-From here, you can register `reducer(state: State, payload: Payload): State` on events (e.g. 'add'). Each reducer is a function that returns a new state object. Multiple reducers can be registered on the same event. The reducers are applied in the order they are registered.
+// register various events through reduce functions
+myStore.on('increased', (state) => ({ count: state.count + 1 }));
+myStore.on('decreased', (state) => ({ count: state.count - 1 }));
+myStore.on('add', (state, { key, value }) => ({ ...state, key: value }));
 
-```js
-myStore.on('add', (state, payload) => ({ ... }));
-myStore.on('update', (state, payload) => ({ ... }));
-myStore.on('remove', (state, payload) => ({ ... }));
-```
+// getting values in various ways
+const state = myStore.get(); // entire state
+const count = myStore.get().count; // a specific value
+const doubleCount = myStore.get((state) => state.count * 2); // a view on the state
 
-## Getting value
+// dispatch an event
+myStore.dispatch('increased');
+myStore.dispatch('add', { key: 'key', value: 'value' });
 
-Reading values from a store can be achieved by using the `get` function from the store. Optionally, you can add a `query` in the get-function. A query is a function that takes the current state as input, and returns an altered value.
-
-```js
-const state = myStore.get();
-const value = myStore.get().key;
-const view = myStore.get(state => ({ ... }));
-```
-
-## Updating a value
-
-Updating the store is achieved by using the `dispatch` function. This function takes in the event name and a payload (e.g. data) as input.
-
-```js
+// register to all changes on the state, via the @changed event
 myStore.on('@changed', (s) => { ... });
-myStore.dispatch('add', { newUser: { ... }});
-```
 
-On each `dispatch`, all reducers registered on the event are triggered, mutating the state. In addition, all listeners registered on `@changed` are triggered. This can be used to listen to updates from the store (e.g. required to rerender the UI).
-
-## Rollback
-
-With storive it is possible to rollback events using the `rollback` function.
-
-```js
+// rollback the last event
 myStore.rollback();
 ```
 
-## React example
+## Generic React hooks example
 
-First you create a React Hook.
-
-```js
+```jsx
 import { useReducer, useRef, useLayoutEffect } from 'react';
+import storive from 'storive';
 
-export default function useStorive(store, query) {
+// Define the store
+const myStore = storive({ count: 0 });
+myStore.on('increased', (s) => ({ count: s.count + 1 }));
+
+// Create the hook
+function useStorive(store, query) {
   const [, rerender] = useReducer((c) => c + 1, 0);
   const value = useRef(store.get(query));
 
@@ -75,24 +64,14 @@ export default function useStorive(store, query) {
 
   return [value.current, store.dispatch, store.rollback];
 }
-```
 
-In a component you use it like:
-
-```jsx
-import storive from 'storive';
-import useStorive from './useStorive';
-
-const store = storive({ key: 0 });
-store.on('increment', (s) => ({ key: s.key + 1 }));
-
-export default function MyButton() {
-  const [state, dispatch] = useStorive(store, (s) => s.key * 2);
+// Apply in a component
+function MyButton() {
+  // here a view on the data is being used in the hook
+  const [state, dispatch] = useStorive(store, (s) => s.count * 2);
 
   return (
     <button onClick={() => dispatch('increment')}>{`value ${state}`}</button>
   );
 }
 ```
-
-The above component shows the counter times 2.
