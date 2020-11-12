@@ -1,18 +1,21 @@
-export type State = Record<string, unknown>;
-export type Payload = Record<string, unknown>;
-export type Reducer<T> = (state: T, payload?: Payload) => T | void;
-export type Query<T> = (state: T) => unknown;
-export type Event = '@changed' | string;
+type State = Record<string, unknown>;
+type Event = '@changed' | string;
+
+export type Query<T extends State> = (state: T) => unknown;
+export type Reducer<T extends State> = (
+  state: T,
+  payload?: Record<string, unknown>
+) => T | void;
 
 export type Store<T extends State> = {
   get(query?: Query<T>): T | unknown;
   on(event: Event, reducer: Reducer<T>): () => void;
-  dispatch(event: Event, payload?: Payload): void;
+  dispatch(event: Event, payload?: Record<string, unknown>): void;
   rollback(): void;
 };
 
 // Used to ensure immutability
-function clone<T extends Record<string, unknown>>(obj: T): T {
+function clone<T extends State>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
