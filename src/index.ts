@@ -1,19 +1,19 @@
 export type State = Record<string, unknown>;
 export type Payload = Record<string, unknown>;
 export type Reducer<T> = (state: T, payload?: Payload) => T | void;
-export type Query<T> = (state: T) => T;
+export type Query<T> = (state: T) => unknown;
 export type Event = '@changed' | string;
 
 export type Store<T extends State> = {
-  get(query?: Query<T>): T;
+  get(query?: Query<T>): T | unknown;
   on(event: Event, reducer: Reducer<T>): () => void;
   dispatch(event: Event, payload?: Payload): void;
   rollback(): void;
 };
 
 // Used to ensure immutability
-function clone<T>(state: T): T {
-  return JSON.parse(JSON.stringify(state));
+function clone<T extends Record<string, unknown>>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
 }
 
 export default function store<T extends State>(init: T): Store<T> {
@@ -22,7 +22,7 @@ export default function store<T extends State>(init: T): Store<T> {
   const _log: [Event, T][] = [];
 
   return {
-    get: (query): T => {
+    get: (query): T | unknown => {
       return query ? query(clone<T>(_state)) : clone<T>(_state);
     },
     on: (event, reducer): (() => void) => {
