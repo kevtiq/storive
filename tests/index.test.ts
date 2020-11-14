@@ -62,8 +62,9 @@ it('rollback', () => {
 
 it('nested', () => {
   expect(fn.mock.calls.length).toBe(0);
-  _store.on('nested', () => {
+  _store.on('nested', (s) => {
     _store.dispatch('add', { key: 'key', value: 'value' });
+    return s;
   });
   _store.dispatch('nested');
   expect(fn.mock.calls.length).toBe(2);

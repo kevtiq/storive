@@ -56,6 +56,9 @@ myStore.on('asyc', async (state) => {
   } catch (e) {
     myStore.dispatch('decreased');
   }
+
+  // debugging options
+  myStore.on('@changed', (s) => console.log('store event', s));
 });
 ```
 
