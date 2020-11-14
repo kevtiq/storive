@@ -25,7 +25,7 @@ export default function store<T extends State>(init: T): Store<T> {
   const _log: [Event, T][] = [];
 
   return {
-    get: (query): T | unknown => {
+    get: (query?): T | unknown => {
       return query ? query(clone<T>(_state)) : clone<T>(_state);
     },
     on: (event, reducer): (() => void) => {

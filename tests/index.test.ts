@@ -2,6 +2,13 @@ import store from '../src';
 
 let fn;
 let _store;
+// const mock = jest.fn().mockResolvedValue('default');
+// const error = jest.fn().mockRejectedValue('default');
+// const callback = jest.fn((x) => x);
+
+function wait(delay = 0): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
 
 beforeEach(() => {
   fn = jest.fn((x) => x);
@@ -51,4 +58,25 @@ it('rollback', () => {
   _store.rollback();
   _store.rollback();
   expect(_store.get().key).toBe(undefined);
+});
+
+it('nested', () => {
+  expect(fn.mock.calls.length).toBe(0);
+  _store.on('nested', () => {
+    _store.dispatch('add', { key: 'key', value: 'value' });
+  });
+  _store.dispatch('nested');
+  expect(fn.mock.calls.length).toBe(2);
+});
+
+it('async', async () => {
+  expect(fn.mock.calls.length).toBe(0);
+  _store.on('async', async () => {
+    await wait(10);
+    _store.dispatch('add', { key: 'key', value: 'value' });
+  });
+  _store.dispatch('async');
+  expect(fn.mock.calls.length).toBe(1);
+  await wait(10);
+  expect(fn.mock.calls.length).toBe(2);
 });
