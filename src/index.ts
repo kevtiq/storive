@@ -1,16 +1,19 @@
+type Remove = () => void;
 type State = Record<string, unknown>;
-type Event = '@changed' | string;
+type Payload = Record<string, unknown>;
+type Event = '@changed' | '@rollback' | string;
 
 export type Query<T extends State> = (state: T) => unknown;
 export type Reducer<T extends State> = (
   state: T,
-  payload?: Record<string, unknown>
+  payload?: Payload,
+  event?: Event
 ) => T | void;
 
 export type Store<T extends State> = {
   get(query?: Query<T>): T | unknown;
-  on(event: Event, reducer: Reducer<T>): () => void;
-  dispatch(event: Event, payload?: Record<string, unknown>): void;
+  on(event: Event, reducer: Reducer<T>): Remove;
+  dispatch(event: Event, payload?: Payload): void;
   rollback(): void;
 };
 
@@ -28,7 +31,7 @@ export default function store<T extends State>(init: T): Store<T> {
     get: (query?): T | unknown => {
       return query ? query(clone<T>(_state)) : clone<T>(_state);
     },
-    on: (event, reducer): (() => void) => {
+    on: (event, reducer): Remove => {
       (_reducers[event] || (_reducers[event] = [])).push(reducer);
       // Returns function that can be called to remove a reducer
       return () => {
@@ -37,19 +40,17 @@ export default function store<T extends State>(init: T): Store<T> {
     },
     dispatch(event, payload): void {
       if (!_reducers[event]) return;
-      // Set a copy of the new state on top of the event log.
       let copy = clone<T>(_state);
-      _log.unshift([event, clone<T>(_state)]);
-      _reducers[event].forEach((r) => {
-        copy = r(copy, payload) as T;
-      });
+      // Set a copy of the new state on top of the event log.
+      _log.unshift([event, copy]);
+      _reducers[event].forEach((r) => (copy = r(copy, payload) as T));
       _state = clone<T>(copy);
       // Trigger all reducer on the store changes
-      _reducers['@changed'].forEach((listener) => listener(copy));
+      _reducers['@changed'].forEach((r) => r(copy, payload, event));
     },
     rollback(): void {
       _state = (_log.shift()?.[1] || {}) as T;
-      _reducers['@changed'].forEach((listener) => listener(_state));
+      _reducers['@changed'].forEach((l) => l(_state, undefined, '@rollback'));
     },
   };
 }

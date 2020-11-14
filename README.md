@@ -33,7 +33,7 @@ myStore.dispatch('increased');
 myStore.dispatch('add', { key: 'key', value: 'value' });
 
 // register to all changes on the state, via the @changed event
-myStore.on('@changed', (s) => { ... });
+myStore.on('@changed', (s, p, e) => { ... });
 
 // rollback the last event
 myStore.rollback();
@@ -58,7 +58,7 @@ myStore.on('asyc', async (state) => {
   }
 
   // debugging options
-  myStore.on('@changed', (s) => console.log('store event', s));
+  myStore.on('@changed', (s, p, e) => console.log(`event (${e}) result:`, s));
 });
 ```
 
