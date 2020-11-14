@@ -25,11 +25,10 @@
     "url": "git+https://github.com/kevtiq/storive.git"
   },
   "keywords": [
-    "pub sub",
+    "store",
     "event-driven",
-    "event",
-    "storage",
-    "queue"
+    "state",
+    "state management"
   ],
   "author": "Kevin Pennekamp <github@kevtiq.dev>",
   "license": "MIT",

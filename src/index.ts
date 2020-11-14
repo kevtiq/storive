@@ -25,7 +25,7 @@ export default function store<T extends State>(init: T): Store<T> {
   const _log: [Event, T][] = [];
 
   return {
-    get: (query): T | unknown => {
+    get: (query?): T | unknown => {
       return query ? query(clone<T>(_state)) : clone<T>(_state);
     },
     on: (event, reducer): (() => void) => {
@@ -38,10 +38,14 @@ export default function store<T extends State>(init: T): Store<T> {
     dispatch(event, payload): void {
       if (!_reducers[event]) return;
       // Set a copy of the new state on top of the event log.
+      let copy = clone<T>(_state);
       _log.unshift([event, clone<T>(_state)]);
-      _reducers[event].forEach((r) => (_state = r(_state, payload) as T));
+      _reducers[event].forEach((r) => {
+        copy = r(copy, payload) as T;
+      });
+      _state = clone<T>(copy);
       // Trigger all reducer on the store changes
-      _reducers['@changed'].forEach((listener) => listener(_state));
+      _reducers['@changed'].forEach((listener) => listener(copy));
     },
     rollback(): void {
       _state = (_log.shift()?.[1] || {}) as T;

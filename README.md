@@ -39,6 +39,29 @@ myStore.on('@changed', (s) => { ... });
 myStore.rollback();
 ```
 
+## Advanced options
+
+```js
+// nested events
+myStore.on('nested', (state) => {
+  // do someting
+  myStore.dispatch('increased');
+});
+
+// nested event can come in handy for async operations
+myStore.on('asyc', async (state) => {
+  try {
+    await myAsyncOperation();
+    myStore.dispatch('increased');
+  } catch (e) {
+    myStore.dispatch('decreased');
+  }
+
+  // debugging options
+  myStore.on('@changed', (s) => console.log('store event', s));
+});
+```
+
 ## Generic React hooks example
 
 ```jsx
