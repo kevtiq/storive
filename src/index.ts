@@ -40,11 +40,10 @@ export default function store<T extends State>(init: T): Store<T> {
     },
     dispatch(event, payload): void {
       if (!_reducers[event]) return;
-      let copy = clone<T>(_state);
       // Set a copy of the new state on top of the event log.
-      _log.unshift([event, copy]);
-      _reducers[event].forEach((r) => (copy = r(copy, payload) as T));
-      _state = clone<T>(copy);
+      _log.unshift([event, clone<T>(_state)]);
+      _reducers[event].forEach((r) => (_state = r(_state, payload) as T));
+      const copy = clone<T>(_state);
       // Trigger all reducer on the store changes
       _reducers['@changed'].forEach((r) => r(copy, payload, event));
     },
