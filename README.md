@@ -39,7 +39,7 @@ myStore.on('@changed', (s, p, e) => console.log(`event (${e}) result:`, s));
 myStore.rollback();
 ```
 
-## Advanced options
+## Advanced options and examples
 
 ### Nested and asynchronous reduce functions
 
@@ -107,7 +107,7 @@ function MyButton() {
 }
 ```
 
-### Stale-while-revalidate
+### Stale-while-revalidate with React Hooks
 
 ```js
 import storive from 'storive';
