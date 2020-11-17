@@ -33,7 +33,7 @@ myStore.dispatch('increased');
 myStore.dispatch('add', { key: 'key', value: 'value' });
 
 // register to all changes on the state, via the @changed event
-myStore.on('@changed', (s, p, e) => { ... });
+myStore.on('@changed', (s, p, e) => console.log(`event (${e}) result:`, s));
 
 // rollback the last event
 myStore.rollback();
@@ -41,13 +41,9 @@ myStore.rollback();
 
 ## Advanced options
 
-```js
-// nested events
-myStore.on('nested', (state) => {
-  // do someting
-  myStore.dispatch('increased');
-});
+### Nested and asynchronous reduce functions
 
+```js
 // nested event can come in handy for async operations
 myStore.on('asyc', async (state) => {
   try {
@@ -56,13 +52,24 @@ myStore.on('asyc', async (state) => {
   } catch (e) {
     myStore.dispatch('decreased');
   }
-
-  // debugging options
-  myStore.on('@changed', (s, p, e) => console.log(`event (${e}) result:`, s));
 });
 ```
 
-## Generic React hooks example
+### Basic CRUD-like events
+
+```js
+const userStore = storive({ users: [] });
+
+userStore.on('created', (s, user) => ({ users: s.users.concat([user]) }));
+userStore.on('deleted', (s, id) => ({
+  users: s.users.filter((u) => u.id !== id),
+}));
+userStore.on('updated', (s, user) => ({
+  users: s.users.map((u) => (u.id === user.id ? user : u)),
+}));
+```
+
+### Generic React hooks example
 
 ```jsx
 import { useReducer, useRef, useLayoutEffect } from 'react';
@@ -80,6 +87,7 @@ function useStorive(store, query) {
   useLayoutEffect(() => {
     const remove = store.on('@changed', (s) => {
       value.current = query ? query(s) : s;
+
       rerender();
     });
     return () => remove();
@@ -96,5 +104,49 @@ function MyButton() {
   return (
     <button onClick={() => dispatch('increment')}>{`value ${state}`}</button>
   );
+}
+```
+
+### Stale-while-revalidate
+
+```js
+import storive from 'storive';
+
+export const store = storive({ data: null, valid: false, maxAge: null });
+
+store.on('dataUpdated', (s, p) => ({ ...s, data: p, valid: false }));
+store.on('responseReceived', (s, p) => {
+  const expires = new Date();
+  // expires after 5 minutes
+  expires.setSeconds(expires.getSeconds() + 5 * 60);
+  return { ...s, loading: false, data: p, maxAge: expires, valid: true };
+});
+
+async function fetcher() {
+  try {
+    const response = await fetch();
+    store.dispatch('responseReceived', response);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+store.on('revalidationStarted', fetcher);
+
+export function query(s) {
+  if (!s.data || !s.valid || new Date() > s.maxAge)
+    store.dispatch('revalidationStarted');
+  return s.data;
+}
+```
+
+```jsx
+import { store, query } from './store';
+
+function MyComponent() {
+  // here a view on the data is being used in the hook
+  const [state] = useStorive(store, query);
+
+  return <div>{state || 'loading'}</div>;
 }
 ```
