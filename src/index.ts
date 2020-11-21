@@ -22,6 +22,16 @@ function clone<T extends State>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
+// Shallow equality check of objects
+function shallow(obj1: State, obj2: State): boolean {
+  return (
+    Object.keys(obj1).length === Object.keys(obj2).length &&
+    Object.keys(obj1).every(
+      (key) => obj2.hasOwnProperty(key) && obj1[key] === obj2[key]
+    )
+  );
+}
+
 export default function store<T extends State>(init: T): Store<T> {
   let _state = init;
   const _reducers: Record<Event, Reducer<T>[]> = { '@changed': [] };
@@ -40,12 +50,16 @@ export default function store<T extends State>(init: T): Store<T> {
     },
     dispatch(event, payload): void {
       if (!_reducers[event]) return;
+      let copy = clone<T>(_state);
       // Set a copy of the new state on top of the event log.
-      _log.unshift([event, clone<T>(_state)]);
+      _log.unshift([event, copy]);
       _reducers[event].forEach((r) => (_state = r(_state, payload) as T));
-      const copy = clone<T>(_state);
+
       // Trigger all reducer on the store changes
-      _reducers['@changed'].forEach((r) => r(copy, payload, event));
+      if (!shallow(copy, _state)) {
+        copy = clone<T>(_state);
+        _reducers['@changed'].forEach((r) => r(copy, payload, event));
+      }
     },
     rollback(): void {
       _state = (_log.shift()?.[1] || {}) as T;

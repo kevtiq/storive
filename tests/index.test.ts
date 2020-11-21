@@ -38,7 +38,15 @@ it('Update a value', () => {
   expect(_store.get().key).toBe('new value 2');
   expect(_store.get().key2).toBe('new value 2');
 
-  expect(fn.mock.calls.length).toBe(3);
+  _store.on('change', (s, { value }) => {
+    s.key3 = value;
+    return s;
+  });
+
+  _store.dispatch('change', { value: 'new value 2' });
+  expect(_store.get().key3).toBe('new value 2');
+
+  expect(fn.mock.calls.length).toBe(4);
 });
 
 it('On and off', () => {
@@ -63,11 +71,11 @@ it('rollback', () => {
 it('nested', () => {
   expect(fn.mock.calls.length).toBe(0);
   _store.on('nested', (s) => {
-    _store.dispatch('add', { key: 'key', value: 'value' });
+    _store.dispatch('add', { key: 'newKey', value: 'value' });
     return s;
   });
   _store.dispatch('nested');
-  expect(fn.mock.calls.length).toBe(2);
+  expect(fn.mock.calls.length).toBe(1);
 });
 
 it('async', async () => {

@@ -33,6 +33,7 @@ myStore.dispatch('increased');
 myStore.dispatch('add', { key: 'key', value: 'value' });
 
 // register to all changes on the state, via the @changed event
+// A shallow check is executed on each dispatch before the @changed is triggered
 myStore.on('@changed', (s, p, e) => console.log(`event (${e}) result:`, s));
 
 // rollback the last event
@@ -42,6 +43,8 @@ myStore.rollback();
 ## Advanced options and examples
 
 ### Nested and asynchronous reduce functions
+
+Using storive, you can easily subscribe logical flows that trigger other changes. For instance, running an asynchronous fetch operation and store the response/error in the store.
 
 ```js
 // nested event can come in handy for async operations
@@ -57,6 +60,8 @@ myStore.on('asyc', async (state) => {
 
 ### Basic CRUD-like events
 
+Many state management activities resolve around default CRUD operations around lists of data.
+
 ```js
 const userStore = storive({ users: [] });
 
@@ -70,6 +75,8 @@ userStore.on('updated', (s, user) => ({
 ```
 
 ### Generic React hooks example
+
+A generic React Hook implementation that automatically rerenders if the store value changes.
 
 ```jsx
 import { useReducer, useRef, useLayoutEffect } from 'react';
@@ -109,15 +116,17 @@ function MyButton() {
 
 ### Stale-while-revalidate with React Hooks
 
+Example how to implement a 'stale-while-revalidate' pattern for data fetching. In this example, a check is done on each `get(...)`. If the data is invalid or expired, the fetch is executed again. For this example, data expires after 5 minutes.
+
 ```js
 import storive from 'storive';
 
 export const store = storive({ data: null, valid: false, maxAge: null });
 
 store.on('dataUpdated', (s, p) => ({ ...s, data: p, valid: false }));
+// expires after 5 minutes
 store.on('responseReceived', (s, p) => {
   const expires = new Date();
-  // expires after 5 minutes
   expires.setSeconds(expires.getSeconds() + 5 * 60);
   return { ...s, loading: false, data: p, maxAge: expires, valid: true };
 });
