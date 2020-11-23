@@ -36,8 +36,10 @@ myStore.dispatch('add', { key: 'key', value: 'value' });
 // A shallow check is executed on each dispatch before the @changed is triggered
 myStore.on('@changed', (s, p, e) => console.log(`event (${e}) result:`, s));
 
-// rollback the last event
-myStore.rollback();
+// undo the last event, can be used multiple times
+myStore.undo();
+// Redo the last 'undo', can be used multiple times. Resets after dispatch.
+myStore.redo();
 ```
 
 ## Advanced options and examples

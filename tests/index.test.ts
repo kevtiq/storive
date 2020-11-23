@@ -61,11 +61,24 @@ it('rollback', () => {
   _store.dispatch('change', { value: 'new value' });
   expect(_store.get().key).toBe('new value');
   _store.dispatch('change', { value: 'new value 2' });
-  _store.rollback();
+  _store.undo();
   expect(_store.get().key).toBe('new value');
-  _store.rollback();
-  _store.rollback();
-  expect(_store.get().key).toBe(undefined);
+  _store.redo();
+  expect(_store.get().key).toBe('new value 2');
+  _store.undo();
+  expect(_store.get().key).toBe('new value');
+  _store.undo();
+  expect(_store.get().key).toBe('value');
+  _store.undo();
+  expect(_store.get().key).toBe('value');
+  _store.redo();
+  expect(_store.get().key).toBe('new value');
+  _store.redo();
+  expect(_store.get().key).toBe('new value 2');
+  _store.redo();
+  expect(_store.get().key).toBe('new value 2');
+  _store.undo();
+  expect(_store.get().key).toBe('new value');
 });
 
 it('nested', () => {
