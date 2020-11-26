@@ -95,9 +95,10 @@ function useStorive(store, query) {
 
   useLayoutEffect(() => {
     const remove = store.on('@changed', (s) => {
-      value.current = query ? query(s) : s;
-
-      rerender();
+      if (value.current !== query ? query(s) : s) {
+        value.current = query ? query(s) : s;
+        rerender();
+      }
     });
     return () => remove();
   }, []); //eslint-disable-line
